@@ -45,7 +45,7 @@ const parseNotionTask = (page) => {
     id: page.id,
     name: extractText(props['Task Name']?.title || []),
     status: mapStatus(statusName),
-    department: extractText(props['Department']?.rich_text || []),
+    department: props['Department']?.select?.name || '',
     assignee: extractText(props['Person/Context']?.rich_text || []) || 'Unassigned',
     dueDate: props['Due Date']?.date?.start || null,
     completion: completion,
