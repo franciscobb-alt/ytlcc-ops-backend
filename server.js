@@ -64,7 +64,7 @@ const parseNotionTask = (page) => {
     dueDate: props['Due Date']?.date?.start || null,
     completion: completion,
     notes: extractText(props['Notes']?.rich_text || []),
-    workstream: extractText(props['Workstream']?.rich_text || []),
+    workstream: props['Workstream']?.select?.name || '',
   };
 };
 
