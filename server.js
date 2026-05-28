@@ -1,75 +1,46 @@
 const express = require('express');
 const cors = require('cors');
-const { Client } = require('@notionhq/client');
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const notion = new Client({ auth: process.env.NOTION_API_KEY });
-const DATABASE_ID = process.env.NOTION_DATABASE_ID;
+const PORT = process.env.PORT || 3000;
 
-app.get('/api/tasks', async (req, res) => {
-  try {
-    const response = await notion.databases.query({
-      database_id: DATABASE_ID,
-      filter: {
-        property: 'Status',
-        select: {
-          does_not_equal: 'Completed'
-        }
-      }
-    });
-
-    const tasks = response.results.map(page => ({
-      id: page.id,
-      name: page.properties['Task Name']?.title?.[0]?.plain_text || 'Untitled',
-      status: page.properties['Status']?.select?.name || 'No status',
-      dueDate: page.properties['Due Date']?.date?.start || null,
-      department: page.properties['Department']?.select?.name || null,
-      workstream: page.properties['Workstream']?.select?.name || null,
-      assignee: page.properties['Person/Assignee']?.people?.[0]?.name || 'Unassigned',
-      completion: page.properties['Completion %']?.number || 0,
-      nextStep: page.properties['Next Step']?.select?.name || null,
-      notes: page.properties['Notes']?.rich_text?.[0]?.plain_text || ''
-    }));
-
-    res.json({ tasks, total: response.results.length });
-  } catch (error) {
-    console.error('Notion API error:', error);
-    res.status(500).json({ error: 'Failed to fetch tasks' });
+// Mock data for testing
+const mockData = {
+  tasks: [
+    { id: '1', name: 'KS Museum Script (Chinese translation)', status: 'In Progress', department: 'Production', assignee: 'Bradley', dueDate: '2026-06-15', completion: 65 },
+    { id: '2', name: 'Power automate premium stuff', status: 'In Progress', department: 'Digital', assignee: 'Hwei', dueDate: '2026-06-20', completion: 40 },
+    { id: '3', name: 'Visitor centre content', status: 'Planning', department: 'Branding', assignee: 'Fran', dueDate: '2026-07-01', completion: 20 },
+    { id: '4', name: 'KS Museum QR Quotes', status: 'In Progress', department: 'Production', assignee: 'Bradley', dueDate: '2026-06-10', completion: 85 },
+    { id: '5', name: 'SPRINT Update moving forward', status: 'Blocked', department: 'Digital', assignee: 'Hwei', dueDate: '2026-06-30', completion: 30 },
+    { id: '6', name: 'LEAD 2026', status: 'In Progress', department: 'Branding', assignee: 'Fran', dueDate: '2026-07-15', completion: 50 },
+    { id: '7', name: 'Chapman content', status: 'Planning', department: 'Digital', assignee: 'Bradley', dueDate: '2026-06-25', completion: 15 },
+    { id: '8', name: 'LUNCH TIME Conversations', status: 'In Progress', department: 'Branding', assignee: 'Fran', dueDate: '2026-06-05', completion: 75 },
+  ],
+  stats: {
+    total: 8,
+    inProgress: 5,
+    blocked: 1,
+    completed: 0
   }
+};
+
+app.get('/api/tasks', (req, res) => {
+  res.json(mockData);
 });
 
-app.get('/api/stats', async (req, res) => {
-  try {
-    const response = await notion.databases.query({
-      database_id: DATABASE_ID
-    });
-
-    const tasks = response.results;
-    const inProgress = tasks.filter(t => t.properties['Status']?.select?.name === 'In Progress').length;
-    const blocked = tasks.filter(t => t.properties['Status']?.select?.name === 'Blocked').length;
-    const completed = tasks.filter(t => t.properties['Status']?.select?.name === 'Completed').length;
-
-    res.json({
-      total: tasks.length,
-      inProgress,
-      blocked,
-      completed
-    });
-  } catch (error) {
-    console.error('Notion API error:', error);
-    res.status(500).json({ error: 'Failed to fetch stats' });
-  }
+app.get('/api/stats', (req, res) => {
+  res.json(mockData.stats);
 });
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', message: 'Backend is running with mock data' });
 });
 
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log('Using MOCK DATA mode');
 });
